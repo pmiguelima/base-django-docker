@@ -1,0 +1,51 @@
+version: "2"
+services:
+
+  mysql:
+    image: mysql:5.7
+    restart: always
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql/data/:/var/lib/mysql/:rw
+      - ./mysql/logs/:/var/log/mysql/:rw
+      - ./mysql/conf.d/mysql.conf:/etc/mysql/my.cnf:rw
+      - ./www/mysql:/home/code
+    environment:
+      - MYSQL_DATABASE=dev
+      - MYSQL_USER=dev
+      - MYSQL_PASSWORD=dev
+      - MYSQL_ROOT_PASSWORD=dev
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    depends_on:
+      - mysql
+    links:
+      - mysql
+
+  django:
+    build: ./django/
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./www/public:/code
+    restart: always
+    ports:
+      - "80:8000"
+    environment:
+      - SECRET_KEY=X(3rIh=i\<o|b]D,{P[j}sz*3oA[?NrHo]]})
+      - DEBUG='False'
+      - ALLOWED_HOSTS=*
+      - DATABASE_ENGINE=django.db.backends.mysql
+      - DATABASE_NAME=dev
+      - DATABASE_USER=dev
+      - DATABASE_PASSWORD=dev
+      - DATABASE_HOST=mysql
+      - DATABASE_PORT=3306
+    depends_on:
+      - mysql
+    links:
+      - mysql
